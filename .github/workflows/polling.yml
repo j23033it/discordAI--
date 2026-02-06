@@ -1,0 +1,62 @@
+name: AI Updates Polling
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *" # every 30 minutes (UTC)
+
+concurrency:
+  group: ai-updates-polling
+  cancel-in-progress: true
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Restore DB cache
+        id: restore-db
+        uses: actions/cache/restore@v4
+        with:
+          path: data/updates.db
+          key: updates-db-${{ github.run_id }}
+          restore-keys: |
+            updates-db-
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Run polling
+        env:
+          DB_PATH: data/updates.db
+          USER_AGENT: discord-ai-updates/0.1 (+github-actions)
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-4.1-mini
+          DISCORD_WEBHOOK_OPENAI: ${{ secrets.DISCORD_WEBHOOK_OPENAI }}
+          DISCORD_WEBHOOK_GEMINI: ${{ secrets.DISCORD_WEBHOOK_GEMINI }}
+          DISCORD_WEBHOOK_CLAUDE: ${{ secrets.DISCORD_WEBHOOK_CLAUDE }}
+          IMMEDIATE_MIN_IMPORTANCE: high
+        run: ai-updates-once
+
+      - name: Upload DB artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: updates-db-polling
+          path: data/updates.db
+          if-no-files-found: ignore
+
+      - name: Save DB cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/updates.db
+          key: updates-db-${{ github.run_id }}
