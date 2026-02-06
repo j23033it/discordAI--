@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import traceback
 
 from .collectors import collect_source
 from .config import Config
@@ -30,21 +31,30 @@ def run_once() -> None:
 
     try:
         for source in SOURCES:
-            raws = collect_source(source, cfg.user_agent)
+            try:
+                raws = collect_source(source, cfg.user_agent)
+            except Exception as exc:
+                print(f"[warn] source collection failed: {source.id}: {exc}")
+                continue
             for raw in raws:
-                item = normalize(raw)
-                if store.is_seen(item.fingerprint):
-                    continue
-                store.add_update(item)
-                summary = summarize(item, cfg.openai_api_key, cfg.openai_model)
-                store.add_summary(item.fingerprint, summary)
+                try:
+                    item = normalize(raw)
+                    if store.is_seen(item.fingerprint):
+                        continue
+                    store.add_update(item)
+                    summary = summarize(item, cfg.openai_api_key, cfg.openai_model)
+                    store.add_summary(item.fingerprint, summary)
 
-                if _IMPORTANCE_ORDER.get(summary.importance, 1) < min_level:
+                    if _IMPORTANCE_ORDER.get(summary.importance, 1) < min_level:
+                        continue
+                    webhook = _service_webhook(cfg, item.service)
+                    if webhook:
+                        send_immediate(webhook, item, summary)
+                        store.mark_immediate_sent(item.fingerprint)
+                except Exception as exc:
+                    print(f"[warn] item pipeline failed: {source.id}: {exc}")
+                    print(traceback.format_exc(limit=1))
                     continue
-                webhook = _service_webhook(cfg, item.service)
-                if webhook:
-                    send_immediate(webhook, item, summary)
-                    store.mark_immediate_sent(item.fingerprint)
     finally:
         store.close()
 
@@ -68,14 +78,22 @@ def run_digest() -> None:
             for service, entries in grouped.items():
                 lines.append(f"\n## {service}")
                 lines.extend(entries[:20])
-            send_digest(cfg.webhook_digest, lines)
+            try:
+                send_digest(cfg.webhook_digest, lines)
+            except Exception as exc:
+                print(f"[warn] digest send failed: {exc}")
+                return
         else:
             for service, entries in grouped.items():
                 webhook = _service_webhook(cfg, service)
                 if not webhook:
                     continue
                 lines = [f"**Daily Digest: {service}**"] + entries[:20]
-                send_digest(webhook, lines)
+                try:
+                    send_digest(webhook, lines)
+                except Exception as exc:
+                    print(f"[warn] digest send failed for {service}: {exc}")
+                    continue
 
         for r in rows:
             store.mark_digest_sent(r["fingerprint"])
