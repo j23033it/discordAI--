@@ -6,7 +6,7 @@ OpenAI / Gemini / Claude Code の公式更新情報を収集し、重複除去�
 - 公式ソース6件を監視（OpenAI, Gemini, Claude Code）
 - 既読管理 + 重複除去（SQLite）
 - 日本語要約（LLM API利用、未設定時フォールバック）
-- Discordサービス別Webhook通知
+- Discordサービス別Webhook通知（即時通知）
 - GitHub Actionsで定期実行
 
 ## Setup
@@ -19,7 +19,6 @@ OpenAI / Gemini / Claude Code の公式更新情報を収集し、重複除去�
 4. まずローカルで動作確認
    ```bash
    ai-updates-once
-   ai-updates-digest
    ```
 
 ## What You Need To Do
@@ -27,20 +26,17 @@ OpenAI / Gemini / Claude Code の公式更新情報を収集し、重複除去�
    - `#openai-updates`
    - `#gemini-updates`
    - `#claude-updates`
-   - (任意) `#ai-digest`
 2. 各チャンネルのWebhook URLを発行
 3. GitHub repository secrets を設定
    - `DISCORD_WEBHOOK_OPENAI`
    - `DISCORD_WEBHOOK_GEMINI`
    - `DISCORD_WEBHOOK_CLAUDE`
-   - `DISCORD_WEBHOOK_DIGEST` (任意)
    - `GEMINI_API_KEY` (Geminiで要約する場合)
    - `OPENAI_API_KEY` (OpenAIで要約する場合)
 4. Actionsを手動実行して初回確認
    - `AI Updates Polling`
-   - `AI Updates Daily Digest`
    - `AI Updates Preview Notification` (UI確認用)
-   - `AI Updates Maintenance` (履歴ノイズ整理用)
+   - `AI Updates Maintenance` (履歴全削除用)
 
 ## Environment Variables
 - `DB_PATH` (default: `data/updates.db`)
@@ -53,13 +49,11 @@ OpenAI / Gemini / Claude Code の公式更新情報を収集し、重複除去�
 - `DISCORD_WEBHOOK_OPENAI`
 - `DISCORD_WEBHOOK_GEMINI`
 - `DISCORD_WEBHOOK_CLAUDE`
-- `DISCORD_WEBHOOK_DIGEST` (任意)
 
 無料枠優先で使う場合は `SUMMARY_PROVIDER=gemini` と `GEMINI_API_KEY` を設定してください。
 
 ## Schedules (recommended)
 - Polling: 30分毎（高信号ソース）
-- Digest: 毎日 09:00 JST
 
 ## GitHub Actions Documentation
 - 専用ドキュメント: `docs/github-actions-guide.md`

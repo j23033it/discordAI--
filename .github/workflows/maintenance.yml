@@ -4,12 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: "メンテ内容 (drop_unsent_digest/reset_all)"
+        description: "メンテ内容 (reset_all)"
         required: true
-        default: "drop_unsent_digest"
+        default: "reset_all"
         type: choice
         options:
-          - drop_unsent_digest
           - reset_all
 
 concurrency:

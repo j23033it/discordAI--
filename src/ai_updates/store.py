@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime
 from pathlib import Path
 
 from .models import Summary, UpdateItem, utc_now
@@ -27,8 +26,7 @@ class Store:
                 body TEXT NOT NULL,
                 first_seen_at TEXT NOT NULL,
                 summarized_at TEXT,
-                sent_immediate_at TEXT,
-                sent_digest_at TEXT
+                sent_immediate_at TEXT
             );
 
             CREATE TABLE IF NOT EXISTS summaries (
@@ -99,44 +97,6 @@ class Store:
             (utc_now().isoformat(), fingerprint),
         )
         self.conn.commit()
-
-    def mark_digest_sent(self, fingerprint: str) -> None:
-        self.conn.execute(
-            "UPDATE seen_updates SET sent_digest_at = ? WHERE fingerprint = ?",
-            (utc_now().isoformat(), fingerprint),
-        )
-        self.conn.commit()
-
-    def unsent_digest_items(self, limit: int = 100):
-        return self.conn.execute(
-            """
-            SELECT u.*, s.headline, s.bullets_json, s.importance, s.topic
-            FROM seen_updates u
-            JOIN summaries s ON s.fingerprint = u.fingerprint
-            WHERE u.sent_digest_at IS NULL
-            ORDER BY u.published_at DESC
-            LIMIT ?
-            """,
-            (limit,),
-        ).fetchall()
-
-    def delete_unsent_digest_items(self) -> int:
-        rows = self.conn.execute(
-            "SELECT fingerprint FROM seen_updates WHERE sent_digest_at IS NULL"
-        ).fetchall()
-        fingerprints = [r["fingerprint"] for r in rows]
-        if not fingerprints:
-            return 0
-
-        placeholders = ",".join(["?"] * len(fingerprints))
-        self.conn.execute(
-            f"DELETE FROM summaries WHERE fingerprint IN ({placeholders})", fingerprints
-        )
-        self.conn.execute(
-            f"DELETE FROM seen_updates WHERE fingerprint IN ({placeholders})", fingerprints
-        )
-        self.conn.commit()
-        return len(fingerprints)
 
     def reset_all(self) -> None:
         self.conn.execute("DELETE FROM summaries")

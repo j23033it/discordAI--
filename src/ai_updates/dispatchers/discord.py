@@ -22,7 +22,3 @@ def _format_item(item: UpdateItem, summary: Summary) -> str:
 
 def send_immediate(webhook_url: str, item: UpdateItem, summary: Summary) -> None:
     post_message(webhook_url, _format_item(item, summary))
-
-
-def send_digest(webhook_url: str, lines: list[str]) -> None:
-    post_message(webhook_url, "\n".join(lines))
