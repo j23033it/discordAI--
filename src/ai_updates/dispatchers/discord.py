@@ -15,7 +15,6 @@ def _format_item(item: UpdateItem, summary: Summary) -> str:
     bullets = "\n".join(f"- {b}" for b in summary.bullets)
     return (
         f"**{summary.headline}**\n"
-        f"重要度: `{summary.importance}` / 分類: `{summary.topic}`\n"
         f"{bullets}\n"
         f"原文: {item.url}"
     )
