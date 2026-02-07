@@ -44,6 +44,20 @@ SOURCES: list[Source] = [
         kind="html",
         url="https://ai.google.dev/gemini-api/docs/changelog",
     ),
+    Source(
+        id="gemini_app_drops",
+        service="gemini",
+        label="Gemini App Drops",
+        kind="html",
+        url="https://gemini.google/gemini-drops/",
+    ),
+    Source(
+        id="gemini_cli_release_notes",
+        service="gemini",
+        label="Gemini CLI Release Notes",
+        kind="html",
+        url="https://geminicli.com/docs/changelogs/",
+    ),
     # Claude
     Source(
         id="claude_code_release_notes",
