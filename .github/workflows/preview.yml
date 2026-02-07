@@ -1,0 +1,41 @@
+name: AI Updates Preview Notification
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "通知先 (all/openai/gemini/claude/digest)"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - openai
+          - gemini
+          - claude
+          - digest
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Send preview notification
+        env:
+          PREVIEW_TARGET: ${{ inputs.target }}
+          DISCORD_WEBHOOK_OPENAI: ${{ secrets.DISCORD_WEBHOOK_OPENAI }}
+          DISCORD_WEBHOOK_GEMINI: ${{ secrets.DISCORD_WEBHOOK_GEMINI }}
+          DISCORD_WEBHOOK_CLAUDE: ${{ secrets.DISCORD_WEBHOOK_CLAUDE }}
+          DISCORD_WEBHOOK_DIGEST: ${{ secrets.DISCORD_WEBHOOK_DIGEST }}
+        run: ai-updates-preview

@@ -13,6 +13,7 @@ dependencies = [
 [project.scripts]
 ai-updates-once = "ai_updates.main:run_once_cli"
 ai-updates-digest = "ai_updates.main:run_digest_cli"
+ai-updates-preview = "ai_updates.preview:run_preview_cli"
 
 [build-system]
 requires = ["setuptools>=69", "wheel"]
