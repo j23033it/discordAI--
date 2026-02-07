@@ -60,11 +60,8 @@ OpenAI / Gemini / Claude Code の公式更新情報を収集し、重複除去�
 - Polling: 30分毎（高信号ソース）
 - Digest: 毎日 09:00 JST
 
-## UI Preview Workflow
-- ワークフロー: `AI Updates Preview Notification`
-- トリガー: `workflow_dispatch`（手動実行のみ）
-- 入力: `target` (`all` / `openai` / `gemini` / `claude` / `digest`)
-- 目的: 新着がない状態でもDiscord通知の見た目と文面を確認する
+## GitHub Actions Documentation
+- 専用ドキュメント: `docs/github-actions-guide.md`
 
 ## Notes
 - GitHub Actions private repo では実行時間課金に注意
