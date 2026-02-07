@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 
 from .config import Config
-from .dispatchers.discord import send_digest, send_immediate
+from .dispatchers.discord import send_immediate
 from .models import Service, Summary, UpdateItem, utc_now
 
 
@@ -49,7 +49,7 @@ def _preview_item(service: Service) -> tuple[UpdateItem, Summary]:
 def run_preview(target: str) -> None:
     cfg = Config.from_env()
     selected = target.lower().strip()
-    allowed = {"all", "openai", "gemini", "claude", "digest"}
+    allowed = {"all", "openai", "gemini", "claude"}
     if selected not in allowed:
         print(f"[warn] invalid PREVIEW_TARGET: {target}")
         return
@@ -57,8 +57,6 @@ def run_preview(target: str) -> None:
     services: list[Service] = ["openai", "gemini", "claude"]
     if selected in services:
         services = [selected]
-    elif selected == "digest":
-        services = []
 
     for service in services:
         webhook = _service_webhook(cfg, service)
@@ -67,20 +65,6 @@ def run_preview(target: str) -> None:
             continue
         item, summary = _preview_item(service)
         send_immediate(webhook, item, summary)
-
-    if selected in {"all", "digest"}:
-        if not cfg.webhook_digest:
-            print("[warn] webhook not set for digest")
-            return
-        lines = [
-            "**AI Updates Daily Digest (プレビュー)**",
-            "",
-            "## preview",
-            "- [openai] UI確認用サンプル通知（リンク遷移チェック）",
-            "- [gemini] UI確認用サンプル通知（読みやすさチェック）",
-            "- [claude] UI確認用サンプル通知（文面チェック）",
-        ]
-        send_digest(cfg.webhook_digest, lines)
 
 
 def run_preview_cli() -> None:

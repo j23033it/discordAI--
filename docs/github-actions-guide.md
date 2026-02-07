@@ -57,9 +57,8 @@ GitHub Repository Secrets に以下を設定します。
 3. Discordで見た目・文面・リンク導線を確認
 
 `target` の意味:
-- `all`: 全サービス + digestプレビュー
+- `all`: 全サービス通知
 - `openai` / `gemini` / `claude`: サービス別通知のみ
-- `digest`: ダイジェスト通知のみ
 
 ## 4. AI Updates Maintenance
 - 役割: 既読DBのノイズ履歴を手動で整理する

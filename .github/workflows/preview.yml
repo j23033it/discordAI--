@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: "通知先 (all/openai/gemini/claude/digest)"
+        description: "通知先 (all/openai/gemini/claude)"
         required: true
         default: "all"
         type: choice
@@ -13,7 +13,6 @@ on:
           - openai
           - gemini
           - claude
-          - digest
 
 jobs:
   preview:
@@ -37,5 +36,4 @@ jobs:
           DISCORD_WEBHOOK_OPENAI: ${{ secrets.DISCORD_WEBHOOK_OPENAI }}
           DISCORD_WEBHOOK_GEMINI: ${{ secrets.DISCORD_WEBHOOK_GEMINI }}
           DISCORD_WEBHOOK_CLAUDE: ${{ secrets.DISCORD_WEBHOOK_CLAUDE }}
-          DISCORD_WEBHOOK_DIGEST: ${{ secrets.DISCORD_WEBHOOK_DIGEST }}
         run: ai-updates-preview
