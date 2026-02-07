@@ -11,8 +11,8 @@ from .http_utils import fetch_text
 
 
 def _slugify(text: str) -> str:
-    s = re.sub(r"[^a-zA-Z0-9\\s-]", "", text).strip().lower()
-    s = re.sub(r"[\\s_-]+", "-", s)
+    s = re.sub(r"[^a-zA-Z0-9\s-]", "", text).strip().lower()
+    s = re.sub(r"[\s_-]+", "-", s)
     return s[:60] or "update"
 
 
