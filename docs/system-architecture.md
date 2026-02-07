@@ -4,7 +4,7 @@
 このシステムは、OpenAI / Gemini / Claude Code の公式更新情報を定期収集し、重複を除外したうえで日本語要約して Discord に通知するバッチ型アプリケーションです。
 
 主な処理責務は以下です。
-- 収集: 公式サイトHTML・GitHub Releases API から更新情報を取得
+- 収集: 公式サイトHTMLから更新情報を取得
 - 正規化: 文字ノイズを整形し、重複判定用 fingerprint を生成
 - 既読管理: SQLite で「通知済み相当」の更新履歴を保持
 - 要約: OpenAI/Gemini で JSON 要約（失敗時はフォールバック）
@@ -67,8 +67,6 @@
 - `src/ai_updates/collectors/html_collector.py`
   - HTML を取得して `h2/h3` セクション単位で本文抽出し `RawItem` 化
   - 見出し文字列から URL フラグメント生成、見出し日付の簡易抽出
-- `src/ai_updates/collectors/github_releases_collector.py`
-  - GitHub Releases API を取得し、最新リリース群を `RawItem` 化
 - `src/ai_updates/collectors/http_utils.py`
   - HTTP テキスト取得と ISO8601 日付パースの共通ユーティリティ
 
@@ -100,7 +98,6 @@
 ## 7. 外部依存と境界
 - 収集境界
   - HTML: 対象サイト構造に依存（`BeautifulSoup` で抽出）
-  - GitHub Releases: GitHub REST API 応答に依存
 - 要約境界
   - OpenAI Responses API / Gemini GenerateContent API
   - APIキー未設定・失敗時はローカルフォールバック要約に自動退避
@@ -109,7 +106,7 @@
 
 ## 8. 変更時の着眼点（保守・拡張）
 - 新しい収集先を追加する場合
-  1. `Source.kind` を決める（既存 `html` / `github_releases` か新種別か）
+  1. `Source.kind` を決める（既存 `html` か新種別か）
   2. `src/ai_updates/sources.py` に `Source` を追加
   3. 新種別なら collector 実装を追加し、`collectors/__init__.py` の分岐を拡張
 - 新しい通知先を追加する場合

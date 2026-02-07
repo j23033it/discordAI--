@@ -44,13 +44,6 @@ SOURCES: list[Source] = [
         kind="html",
         url="https://ai.google.dev/gemini-api/docs/changelog",
     ),
-    Source(
-        id="gemini_cli_releases",
-        service="gemini",
-        label="Gemini CLI Releases",
-        kind="github_releases",
-        url="https://api.github.com/repos/google-gemini/gemini-cli/releases",
-    ),
     # Claude
     Source(
         id="claude_code_release_notes",
@@ -58,12 +51,5 @@ SOURCES: list[Source] = [
         label="Claude Code Release Notes",
         kind="html",
         url="https://docs.anthropic.com/en/release-notes/claude-code",
-    ),
-    Source(
-        id="claude_code_github_releases",
-        service="claude",
-        label="Claude Code GitHub Releases",
-        kind="github_releases",
-        url="https://api.github.com/repos/anthropics/claude-code/releases",
     ),
 ]

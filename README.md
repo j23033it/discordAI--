@@ -3,7 +3,7 @@
 OpenAI / Gemini / Claude Code の公式更新情報を収集し、重複除去・日本語要約して Discord に通知する最小実装です。
 
 ## Features
-- 公式ソース6件を監視（OpenAI, Gemini, Claude Code）
+- 公式ドキュメントソース4件を監視（OpenAI, Gemini, Claude Code）
 - 既読管理 + 重複除去（SQLite）
 - 日本語要約（LLM API利用、未設定時フォールバック）
 - Discordサービス別Webhook通知（即時通知）
