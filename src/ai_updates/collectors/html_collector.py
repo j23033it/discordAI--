@@ -9,14 +9,18 @@ from ..models import RawItem
 from ..sources import Source
 from .http_utils import fetch_text
 
+"""HTMLページから更新候補を抽出するコレクター。"""
+
 
 def _slugify(text: str) -> str:
+    # 見出し文字列を URL フラグメント向けの安全な形へ変換する。
     s = re.sub(r"[^a-zA-Z0-9\s-]", "", text).strip().lower()
     s = re.sub(r"[\s_-]+", "-", s)
     return s[:60] or "update"
 
 
 def _parse_date_from_text(text: str) -> datetime | None:
+    # 見出しに含まれる日付を拾う（YYYY-MM-DD / Month DD, YYYY）。
     patterns = [
         r"(20\\d{2})[-/](\\d{1,2})[-/](\\d{1,2})",
         r"(January|February|March|April|May|June|July|August|September|October|November|December)\\s+(\\d{1,2}),\\s*(20\\d{2})",
@@ -39,6 +43,7 @@ def _parse_date_from_text(text: str) -> datetime | None:
 
 
 def _extract_sections(soup: BeautifulSoup) -> list[tuple[str, str, datetime | None]]:
+    # main/article 配下の h2/h3 を起点に「見出し + 本文」を区切って抽出する。
     main = soup.find("main") or soup.find("article") or soup.body
     if not main:
         return []
@@ -46,6 +51,7 @@ def _extract_sections(soup: BeautifulSoup) -> list[tuple[str, str, datetime | No
     sections: list[tuple[str, str, datetime | None]] = []
     headers = main.find_all(["h2", "h3"])
     if not headers:
+        # 見出しがないページは先頭テキストを1件として扱う。
         text = " ".join(p.get_text(" ", strip=True) for p in main.find_all(["p", "li"])[:80])
         return [("Latest Update", text, None)] if text else []
 
@@ -54,12 +60,14 @@ def _extract_sections(soup: BeautifulSoup) -> list[tuple[str, str, datetime | No
         parts: list[str] = []
         for sib in h.next_siblings:
             if getattr(sib, "name", None) in ["h2", "h3"]:
+                # 次の見出しに到達したら現セクション終了。
                 break
             if getattr(sib, "name", None) in ["p", "li", "ul", "ol", "div"]:
                 txt = sib.get_text(" ", strip=True)
                 if txt:
                     parts.append(txt)
             if len(" ".join(parts)) > 2500:
+                # 1件が長すぎると要約品質が落ちるため上限を設ける。
                 break
         body = " ".join(parts).strip()
         if not body:
@@ -69,6 +77,7 @@ def _extract_sections(soup: BeautifulSoup) -> list[tuple[str, str, datetime | No
 
 
 def collect(source: Source, user_agent: str) -> list[RawItem]:
+    # ページ全体を取得し、セクションごとに RawItem 化する。
     html = fetch_text(source.url, user_agent)
     soup = BeautifulSoup(html, "html.parser")
 
@@ -79,6 +88,7 @@ def collect(source: Source, user_agent: str) -> list[RawItem]:
 
     items: list[RawItem] = []
     for idx, (heading, body, published_at) in enumerate(sections):
+        # 同一ページ内でもユニークURLになるよう index を付ける。
         fragment = _slugify(heading)
         url = f"{source.url}#{fragment}-{idx}"
         items.append(

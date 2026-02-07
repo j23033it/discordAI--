@@ -6,8 +6,11 @@ from .config import Config
 from .dispatchers.discord import send_immediate
 from .models import Service, Summary, UpdateItem, utc_now
 
+"""新着がなくても Discord 表示を確認できるプレビュー通知用モジュール。"""
+
 
 def _service_webhook(cfg: Config, service: str) -> str | None:
+    # サービス名に対応する Webhook を返す。
     if service == "openai":
         return cfg.webhook_openai
     if service == "gemini":
@@ -18,6 +21,7 @@ def _service_webhook(cfg: Config, service: str) -> str | None:
 
 
 def _preview_item(service: Service) -> tuple[UpdateItem, Summary]:
+    # 実データの代わりに、UI確認用の固定サンプルを生成する。
     now = utc_now()
     links = {
         "openai": "https://platform.openai.com/docs/overview",
@@ -47,6 +51,7 @@ def _preview_item(service: Service) -> tuple[UpdateItem, Summary]:
 
 
 def run_preview(target: str) -> None:
+    # target の値に応じて、1サービスまたは全サービスにサンプル送信する。
     cfg = Config.from_env()
     selected = target.lower().strip()
     allowed = {"all", "openai", "gemini", "claude"}
@@ -56,6 +61,7 @@ def run_preview(target: str) -> None:
 
     services: list[Service] = ["openai", "gemini", "claude"]
     if selected in services:
+        # `openai` のように単一指定された場合はその1件だけ送る。
         services = [selected]
 
     for service in services:
@@ -68,4 +74,5 @@ def run_preview(target: str) -> None:
 
 
 def run_preview_cli() -> None:
+    # GitHub Actions などから環境変数で実行対象を受け取る。
     run_preview(os.getenv("PREVIEW_TARGET", "all"))

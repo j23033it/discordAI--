@@ -5,15 +5,19 @@ from pathlib import Path
 
 from .models import Summary, UpdateItem, utc_now
 
+"""SQLite を使った永続化層。既読管理と要約保存を担当する。"""
+
 
 class Store:
     def __init__(self, db_path: Path) -> None:
+        # DBディレクトリが無ければ作成してから接続する。
         db_path.parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
         self._init_schema()
 
     def _init_schema(self) -> None:
+        # 起動時に必要テーブルを自動作成する。
         self.conn.executescript(
             """
             CREATE TABLE IF NOT EXISTS seen_updates (
@@ -43,12 +47,14 @@ class Store:
         self.conn.commit()
 
     def is_seen(self, fingerprint: str) -> bool:
+        # 既読判定は fingerprint の存在確認のみで行う。
         row = self.conn.execute(
             "SELECT 1 FROM seen_updates WHERE fingerprint = ? LIMIT 1", (fingerprint,)
         ).fetchone()
         return row is not None
 
     def add_update(self, item: UpdateItem) -> None:
+        # INSERT OR IGNORE で二重登録を防ぐ。
         self.conn.execute(
             """
             INSERT OR IGNORE INTO seen_updates (
@@ -69,6 +75,7 @@ class Store:
         self.conn.commit()
 
     def add_summary(self, fingerprint: str, summary: Summary) -> None:
+        # 箇条書きは改行区切りで1カラムに保存する。
         bullets = "\n".join(summary.bullets)
         self.conn.execute(
             """
@@ -86,12 +93,14 @@ class Store:
             ),
         )
         self.conn.execute(
+            # 要約完了時刻を seen_updates 側にも記録する。
             "UPDATE seen_updates SET summarized_at = ? WHERE fingerprint = ?",
             (utc_now().isoformat(), fingerprint),
         )
         self.conn.commit()
 
     def mark_immediate_sent(self, fingerprint: str) -> None:
+        # Discord 送信済みフラグの更新。
         self.conn.execute(
             "UPDATE seen_updates SET sent_immediate_at = ? WHERE fingerprint = ?",
             (utc_now().isoformat(), fingerprint),
@@ -99,6 +108,7 @@ class Store:
         self.conn.commit()
 
     def reset_all(self) -> None:
+        # テストや再通知確認用に履歴を全削除する。
         self.conn.execute("DELETE FROM summaries")
         self.conn.execute("DELETE FROM seen_updates")
         self.conn.commit()

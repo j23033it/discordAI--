@@ -5,11 +5,14 @@ from typing import Literal
 
 from .models import Service
 
+"""監視対象ソースの定義。"""
+
 SourceKind = Literal["html", "github_releases"]
 
 
 @dataclass(frozen=True, slots=True)
 class Source:
+    # 収集先を表す設定オブジェクト。
     id: str
     service: Service
     label: str
@@ -18,6 +21,7 @@ class Source:
 
 
 SOURCES: list[Source] = [
+    # OpenAI
     Source(
         id="openai_chatgpt_release_notes",
         service="openai",
@@ -32,6 +36,7 @@ SOURCES: list[Source] = [
         kind="html",
         url="https://developers.openai.com/codex/changelog",
     ),
+    # Gemini
     Source(
         id="gemini_api_changelog",
         service="gemini",
@@ -46,6 +51,7 @@ SOURCES: list[Source] = [
         kind="github_releases",
         url="https://api.github.com/repos/google-gemini/gemini-cli/releases",
     ),
+    # Claude
     Source(
         id="claude_code_release_notes",
         service="claude",
