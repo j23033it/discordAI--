@@ -120,5 +120,28 @@ class Store:
             (limit,),
         ).fetchall()
 
+    def delete_unsent_digest_items(self) -> int:
+        rows = self.conn.execute(
+            "SELECT fingerprint FROM seen_updates WHERE sent_digest_at IS NULL"
+        ).fetchall()
+        fingerprints = [r["fingerprint"] for r in rows]
+        if not fingerprints:
+            return 0
+
+        placeholders = ",".join(["?"] * len(fingerprints))
+        self.conn.execute(
+            f"DELETE FROM summaries WHERE fingerprint IN ({placeholders})", fingerprints
+        )
+        self.conn.execute(
+            f"DELETE FROM seen_updates WHERE fingerprint IN ({placeholders})", fingerprints
+        )
+        self.conn.commit()
+        return len(fingerprints)
+
+    def reset_all(self) -> None:
+        self.conn.execute("DELETE FROM summaries")
+        self.conn.execute("DELETE FROM seen_updates")
+        self.conn.commit()
+
     def close(self) -> None:
         self.conn.close()

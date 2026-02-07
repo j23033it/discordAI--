@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import os
 import traceback
 
 from .collectors import collect_source
@@ -109,3 +110,25 @@ def run_once_cli() -> None:
 
 def run_digest_cli() -> None:
     run_digest()
+
+
+def run_maintenance(action: str) -> None:
+    cfg = Config.from_env()
+    store = Store(cfg.db_path)
+    try:
+        if action == "drop_unsent_digest":
+            deleted = store.delete_unsent_digest_items()
+            print(f"[info] deleted unsent digest items: {deleted}")
+            return
+        if action == "reset_all":
+            store.reset_all()
+            print("[info] reset all update history")
+            return
+        raise ValueError(f"unknown maintenance action: {action}")
+    finally:
+        store.close()
+
+
+def run_maintenance_cli() -> None:
+    action = os.getenv("MAINTENANCE_ACTION", "drop_unsent_digest").strip().lower()
+    run_maintenance(action)

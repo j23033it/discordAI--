@@ -6,6 +6,7 @@
 - `AI Updates Polling`
 - `AI Updates Daily Digest`
 - `AI Updates Preview Notification`
+- `AI Updates Maintenance`
 
 ## 事前準備
 GitHub Repository Secrets に以下を設定します。
@@ -60,7 +61,22 @@ GitHub Repository Secrets に以下を設定します。
 - `openai` / `gemini` / `claude`: サービス別通知のみ
 - `digest`: ダイジェスト通知のみ
 
+## 4. AI Updates Maintenance
+- 役割: 既読DBのノイズ履歴を手動で整理する
+- 実行タイミング: 手動実行のみ
+- ワークフロー定義: `.github/workflows/maintenance.yml`
+
+手動実行手順:
+1. `Actions` → `AI Updates Maintenance`
+2. `Run workflow` で `action` を選択
+3. `Run maintenance` ステップ成功を確認
+
+`action` の意味:
+- `drop_unsent_digest`: 未送信ダイジェスト候補だけ削除（過去ノイズ整理に推奨）
+- `reset_all`: 既読DBを全削除（全履歴リセット）
+
 ## トラブルシュート
 1. 実行は成功だが通知ゼロ: 新着なしの可能性。`AI Updates Preview Notification` で表示確認を先に行う
 2. 要約が英語になる: `SUMMARY_PROVIDER` と対応する API キーの設定を確認
 3. 401/403/429 エラー: APIキー誤り、権限不足、無料枠/クォータ超過を確認
+4. 過去の未和訳通知がノイズ: `AI Updates Maintenance` の `drop_unsent_digest` 実行後、`AI Updates Polling` を再実行

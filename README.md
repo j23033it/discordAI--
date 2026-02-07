@@ -40,6 +40,7 @@ OpenAI / Gemini / Claude Code の公式更新情報を収集し、重複除去�
    - `AI Updates Polling`
    - `AI Updates Daily Digest`
    - `AI Updates Preview Notification` (UI確認用)
+   - `AI Updates Maintenance` (履歴ノイズ整理用)
 
 ## Environment Variables
 - `DB_PATH` (default: `data/updates.db`)
