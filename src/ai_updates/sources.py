@@ -55,8 +55,8 @@ SOURCES: list[Source] = [
     Source(
         id="claude_code_release_notes",
         service="claude",
-        label="Claude Code Release Notes",
+        label="Claude Release Notes",
         kind="html",
-        url="https://docs.anthropic.com/en/release-notes/claude-code",
+        url="https://support.claude.com/en/articles/12138966-release-notes",
     ),
 ]
