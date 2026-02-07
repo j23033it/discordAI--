@@ -34,7 +34,8 @@ OpenAI / Gemini / Claude Code の公式更新情報を収集し、重複除去�
    - `DISCORD_WEBHOOK_GEMINI`
    - `DISCORD_WEBHOOK_CLAUDE`
    - `DISCORD_WEBHOOK_DIGEST` (任意)
-   - `OPENAI_API_KEY` (要約品質を上げる場合)
+   - `GEMINI_API_KEY` (Geminiで要約する場合)
+   - `OPENAI_API_KEY` (OpenAIで要約する場合)
 4. Actionsを手動実行して初回確認
    - `AI Updates Polling`
    - `AI Updates Daily Digest`
@@ -42,13 +43,17 @@ OpenAI / Gemini / Claude Code の公式更新情報を収集し、重複除去�
 ## Environment Variables
 - `DB_PATH` (default: `data/updates.db`)
 - `USER_AGENT` (defaultあり)
+- `SUMMARY_PROVIDER` (`gemini` or `openai`, default: `openai`)
 - `OPENAI_API_KEY` (任意, 要約の品質向上用)
 - `OPENAI_MODEL` (default: `gpt-4.1-mini`)
+- `GEMINI_API_KEY` (任意, `SUMMARY_PROVIDER=gemini` で利用)
+- `GEMINI_MODEL` (default: `gemini-2.5-flash-lite`)
 - `DISCORD_WEBHOOK_OPENAI`
 - `DISCORD_WEBHOOK_GEMINI`
 - `DISCORD_WEBHOOK_CLAUDE`
 - `DISCORD_WEBHOOK_DIGEST` (任意)
-- `IMMEDIATE_MIN_IMPORTANCE` (`high`/`medium`/`low`, default: `high`)
+
+無料枠優先で使う場合は `SUMMARY_PROVIDER=gemini` と `GEMINI_API_KEY` を設定してください。
 
 ## Schedules (recommended)
 - Polling: 30分毎（高信号ソース）
@@ -56,4 +61,3 @@ OpenAI / Gemini / Claude Code の公式更新情報を収集し、重複除去�
 
 ## Notes
 - GitHub Actions private repo では実行時間課金に注意
-- 低重要度は日次ダイジェスト中心にするとノイズとコストを抑制できます

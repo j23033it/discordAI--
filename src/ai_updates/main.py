@@ -11,8 +11,6 @@ from .sources import SOURCES
 from .store import Store
 from .summarizer import summarize
 
-_IMPORTANCE_ORDER = {"low": 1, "medium": 2, "high": 3}
-
 
 def _service_webhook(cfg: Config, service: str) -> str | None:
     if service == "openai":
@@ -27,7 +25,6 @@ def _service_webhook(cfg: Config, service: str) -> str | None:
 def run_once() -> None:
     cfg = Config.from_env()
     store = Store(cfg.db_path)
-    min_level = _IMPORTANCE_ORDER.get(cfg.immediate_min_importance, 3)
 
     try:
         for source in SOURCES:
@@ -42,11 +39,16 @@ def run_once() -> None:
                     if store.is_seen(item.fingerprint):
                         continue
                     store.add_update(item)
-                    summary = summarize(item, cfg.openai_api_key, cfg.openai_model)
+                    summary = summarize(
+                        item=item,
+                        provider=cfg.summary_provider,
+                        openai_api_key=cfg.openai_api_key,
+                        openai_model=cfg.openai_model,
+                        gemini_api_key=cfg.gemini_api_key,
+                        gemini_model=cfg.gemini_model,
+                    )
                     store.add_summary(item.fingerprint, summary)
 
-                    if _IMPORTANCE_ORDER.get(summary.importance, 1) < min_level:
-                        continue
                     webhook = _service_webhook(cfg, item.service)
                     if webhook:
                         send_immediate(webhook, item, summary)

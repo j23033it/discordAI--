@@ -38,12 +38,14 @@ jobs:
         env:
           DB_PATH: data/updates.db
           USER_AGENT: discord-ai-updates/0.1 (+github-actions)
+          SUMMARY_PROVIDER: gemini
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: gpt-4.1-mini
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: gemini-2.5-flash-lite
           DISCORD_WEBHOOK_OPENAI: ${{ secrets.DISCORD_WEBHOOK_OPENAI }}
           DISCORD_WEBHOOK_GEMINI: ${{ secrets.DISCORD_WEBHOOK_GEMINI }}
           DISCORD_WEBHOOK_CLAUDE: ${{ secrets.DISCORD_WEBHOOK_CLAUDE }}
-          IMMEDIATE_MIN_IMPORTANCE: high
         run: ai-updates-once
 
       - name: Upload DB artifact

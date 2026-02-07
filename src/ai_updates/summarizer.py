@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import json
+from urllib.parse import quote
 from typing import Any
 
 import httpx
 
 from .models import Summary, UpdateItem
+
+
+_FALLBACK_BULLET_TEMPLATE = "要点: (要約取得失敗)"
 
 
 def heuristic_importance(item: UpdateItem) -> str:
@@ -34,18 +38,42 @@ def _fallback_summary(item: UpdateItem) -> Summary:
     )
 
 
+def _build_prompt(item: UpdateItem) -> str:
+    return (
+        "次の更新情報を日本語で要約してください。"
+        "厳密にJSONで返してください。"
+        "スキーマ: {headline: string, bullets: [string,string,string], importance: high|medium|low, topic: string}.\n"
+        f"title: {item.title}\n"
+        f"url: {item.url}\n"
+        f"published_at: {item.published_at.isoformat()}\n"
+        f"body: {item.body[:4000]}"
+    )
+
+
+def _summary_from_parsed(parsed: dict[str, Any], item: UpdateItem) -> Summary:
+    importance = parsed.get("importance", heuristic_importance(item))
+    if importance not in {"high", "medium", "low"}:
+        importance = heuristic_importance(item)
+
+    bullets = list(parsed.get("bullets", []))[:3]
+    if not bullets:
+        bullets = [
+            f"更新元: {item.source_id}",
+            _FALLBACK_BULLET_TEMPLATE,
+            f"公開: {item.published_at.date().isoformat()}",
+        ]
+    return Summary(
+        headline=parsed.get("headline", item.title),
+        bullets=bullets,
+        importance=importance,
+        topic=parsed.get("topic", "release-note"),
+    )
+
+
 def summarize_with_openai(api_key: str, model: str, item: UpdateItem) -> Summary:
     prompt = {
         "role": "user",
-        "content": (
-            "次の更新情報を日本語で要約してください。"
-            "厳密にJSONで返してください。"
-            "スキーマ: {headline: string, bullets: [string,string,string], importance: high|medium|low, topic: string}.\n"
-            f"title: {item.title}\n"
-            f"url: {item.url}\n"
-            f"published_at: {item.published_at.isoformat()}\n"
-            f"body: {item.body[:4000]}"
-        ),
+        "content": _build_prompt(item),
     }
     body: dict[str, Any] = {
         "model": model,
@@ -61,19 +89,50 @@ def summarize_with_openai(api_key: str, model: str, item: UpdateItem) -> Summary
         res.raise_for_status()
         data = res.json()
     text = data.get("output", [{}])[0].get("content", [{}])[0].get("text", "{}")
-    parsed = json.loads(text)
-    return Summary(
-        headline=parsed["headline"],
-        bullets=list(parsed["bullets"])[:3],
-        importance=parsed.get("importance", heuristic_importance(item)),
-        topic=parsed.get("topic", "release-note"),
+    return _summary_from_parsed(json.loads(text), item)
+
+
+def summarize_with_gemini(api_key: str, model: str, item: UpdateItem) -> Summary:
+    body: dict[str, Any] = {
+        "contents": [{"parts": [{"text": _build_prompt(item)}]}],
+        "generationConfig": {"responseMimeType": "application/json"},
+    }
+    encoded_model = quote(model, safe="")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{encoded_model}:generateContent?key={api_key}"
+    with httpx.Client(timeout=30) as client:
+        res = client.post(url, json=body)
+        res.raise_for_status()
+        data = res.json()
+    text = (
+        data.get("candidates", [{}])[0]
+        .get("content", {})
+        .get("parts", [{}])[0]
+        .get("text", "{}")
     )
+    return _summary_from_parsed(json.loads(text), item)
 
 
-def summarize(item: UpdateItem, api_key: str | None, model: str) -> Summary:
-    if not api_key:
+def summarize(
+    item: UpdateItem,
+    provider: str,
+    openai_api_key: str | None,
+    openai_model: str,
+    gemini_api_key: str | None,
+    gemini_model: str,
+) -> Summary:
+    selected = provider.lower()
+
+    if selected == "gemini":
+        if not gemini_api_key:
+            return _fallback_summary(item)
+        try:
+            return summarize_with_gemini(gemini_api_key, gemini_model, item)
+        except Exception:
+            return _fallback_summary(item)
+
+    if not openai_api_key:
         return _fallback_summary(item)
     try:
-        return summarize_with_openai(api_key, model, item)
+        return summarize_with_openai(openai_api_key, openai_model, item)
     except Exception:
         return _fallback_summary(item)
